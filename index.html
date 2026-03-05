@@ -427,7 +427,7 @@
       const [activeSlot, setActiveSlot] = useState(null);
       const [tempSlotUrl, setTempSlotUrl] = useState('');
 
-      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbycr2NSgGF85IcXbpZR-doYOZR4wN9VJmldFGO1wKz9fQBSlqODVHPmb8hS9PQLZYr3oQ/exec";
+      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyv-wId_IX52MgLbrsFSkk3_i3wR2wea-nmd6UDOZ7JM-RpfB4Aey29m6Lr8S7dz3I4-w/exec";
 
       const fetchAPI = async (payload) => {
         try {
@@ -869,7 +869,7 @@
                         let finalUrl = tempImageUrl;
                         const match = finalUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || finalUrl.match(/id=([a-zA-Z0-9_-]+)/) || finalUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
                         if (match && match[1]) {
-                            finalUrl = "https://lh3.googleusercontent.com/d/" + match[1];
+                            finalUrl = `https://lh3.googleusercontent.com/d/${match[1]}`;
                         }
                         setProfileImage(finalUrl); 
                         fetchAPI({ action: 'saveProfileImage', imageUrl: finalUrl });
@@ -896,7 +896,7 @@
                         let finalUrl = tempBannerUrl;
                         const match = finalUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || finalUrl.match(/id=([a-zA-Z0-9_-]+)/) || finalUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
                         if (match && match[1]) {
-                            finalUrl = "https://lh3.googleusercontent.com/d/" + match[1];
+                            finalUrl = `https://lh3.googleusercontent.com/d/${match[1]}`;
                         }
                         setBannerImage(finalUrl); 
                         toggleBannerVisibility(true);
@@ -924,7 +924,7 @@
                         let finalUrl = tempSlotUrl;
                         const match = finalUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || finalUrl.match(/id=([a-zA-Z0-9_-]+)/) || finalUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
                         if (match && match[1]) {
-                            finalUrl = "https://lh3.googleusercontent.com/d/" + match[1];
+                            finalUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
                         }
                         setSlotImages(prev => ({ ...prev, [activeSlot]: finalUrl })); 
                         fetchAPI({ action: 'saveSlotImage', slotIndex: activeSlot, imageUrl: finalUrl });
