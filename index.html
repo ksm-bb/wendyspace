@@ -42,35 +42,35 @@
     // 🎨 ตัวแปรสีหลัก (COLORS Object)
     // ==========================================
     const COLORS = {
-      blue: '#B2E0DF',       // สีพาสเทลฟ้า/เขียวมินต์
-      pink: '#FFB5CA',       // สีพาสเทลชมพู
-      purple: '#ffebb9',     // สีเหลืองพาสเทล
-      orange: '#B2E0DF',     // ใช้สีฟ้าเพื่อความสมดุล
-      bg: '#FFF5F8',         // สีพื้นหลังทั้งเพจ (ชมพูอ่อนมาก)
-      white: '#ffffff',      
-      textMain: '#915C6B',   // สีข้อความหลัก (น้ำตาลอมชมพู)
-      textSoft: '#C492A0',   // สีข้อความรอง
-      pinkDeep: '#EB6D94',   // สี accent เข้ม (ปุ่ม, badge) ชมพูเชอร์รี่
-      blueDeep: '#5C9E9D',   // สี accent เข้ม (ฟ้าเข้ม)
-      purpleDeep: '#e6a56e', // สี accent เหลืองเข้ม
-      orangeDeep: '#5C9E9D', // ฟ้าเข้ม
-      cardBg: '#FFFFFF',     // สีพื้นหลังการ์ดงาน (todo/doing)
-      cardBgDone: '#F2FAFA', // สีพื้นหลังการ์ดงาน (done)
+      blue: '#B2E0DF',
+      pink: '#FFB5CA',
+      purple: '#ffebb9',
+      orange: '#B2E0DF',
+      bg: '#FFF5F8',
+      white: '#ffffff',
+      textMain: '#915C6B',
+      textSoft: '#C492A0',
+      pinkDeep: '#EB6D94',
+      blueDeep: '#5C9E9D',
+      purpleDeep: '#e6a56e',
+      orangeDeep: '#5C9E9D',
+      cardBg: '#FFFFFF',
+      cardBgDone: '#F2FAFA',
 
-      cardWhite: '#ffffff',       
-      cardBorder: '#ffffff',      
-      cardInner: '#ffffff',       
-      cloudWhite: '#ffffff',      
-      modalBg: '#ffffff',         
-      navBarBg: '#ffffff',        
-      profileBorder: '#ffffff',   
-      buttonBg: '#ffffff',        
-      dividerColor: '#ffffff',    
-      emptyStateBg: '#ffffff',    
-      calendarBg: '#ffffff',      
-      searchInputBg: '#ffffff',   
-      filterBarBg: '#ffffff',     
-      bannerOverlayBg: '#ffffff', 
+      cardWhite: '#ffffff',
+      cardBorder: '#ffffff',
+      cardInner: '#ffffff',
+      cloudWhite: '#ffffff',
+      modalBg: '#ffffff',
+      navBarBg: '#ffffff',
+      profileBorder: '#ffffff',
+      buttonBg: '#ffffff',
+      dividerColor: '#ffffff',
+      emptyStateBg: '#ffffff',
+      calendarBg: '#ffffff',
+      searchInputBg: '#ffffff',
+      filterBarBg: '#ffffff',
+      bannerOverlayBg: '#ffffff',
     };
 
     // ==========================================
@@ -421,6 +421,12 @@
       const [selectedNextDate, setSelectedNextDate] = useState(''); 
       const [isBouncing, setIsBouncing] = useState(false); 
 
+      // 🖼️ State สำหรับช่องใส่รูป 3 ช่อง
+      const [slotImages, setSlotImages] = useState({ 1: null, 2: null, 3: null });
+      const [showSlotModal, setShowSlotModal] = useState(false);
+      const [activeSlot, setActiveSlot] = useState(null);
+      const [tempSlotUrl, setTempSlotUrl] = useState('');
+
       const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyv-wId_IX52MgLbrsFSkk3_i3wR2wea-nmd6UDOZ7JM-RpfB4Aey29m6Lr8S7dz3I4-w/exec";
 
       const fetchAPI = async (payload) => {
@@ -451,6 +457,13 @@
               if (response.data.bannerImage) setBannerImage(response.data.bannerImage);
               if (response.data.bannerVisible !== undefined) setIsBannerVisible(response.data.bannerVisible);
               if (response.data.lockedNextDate) setSelectedNextDate(response.data.lockedNextDate);
+              
+              // 🖼️ โหลดข้อมูลรูปทั้ง 3 ช่อง
+              setSlotImages({
+                1: response.data.slotImage1 || null,
+                2: response.data.slotImage2 || null,
+                3: response.data.slotImage3 || null
+              });
             }
             setIsLoading(false);
           })
@@ -649,6 +662,47 @@
                     <span className="text-[11px] font-bold flex items-center gap-2" style={{ color: COLORS.textSoft }}><IconPlus size={16}/> เพิ่มรูปแบนเนอร์ร้าน</span>
                  </div>
                )}
+
+               {/* --- 🖼️ แสดงช่องใส่รูป 3 ช่อง (แนวตั้ง) --- */}
+               <div className="flex flex-col gap-4 mt-4">
+                 {[1, 2, 3].map((slot) => {
+                   const imgUrl = slotImages[slot];
+                   // ถ้าช่องไหนยังไม่มีรูป แล้วผู้ใช้ไม่ใช่แอดมิน ให้ซ่อนช่องนั้นไปเลย (แขกจะไม่เห็นช่องว่างเปล่า)
+                   if (!imgUrl && !isAdmin) return null;
+
+                   return (
+                     <div key={slot} 
+                          onClick={() => {
+                            if (isAdmin) {
+                              setActiveSlot(slot);
+                              setTempSlotUrl(imgUrl || '');
+                              setShowSlotModal(true);
+                            }
+                          }}
+                          className={`w-full aspect-square rounded-[24px] border-[3px] backdrop-blur-sm flex items-center justify-center transition-colors group relative overflow-hidden shadow-sm ${!imgUrl ? 'border-dashed cursor-pointer hover:opacity-80' : 'border-solid'}`} 
+                          style={{ borderColor: COLORS.cardBorder, backgroundColor: `${COLORS.cardWhite}66` }}>
+                        
+                        {imgUrl ? (
+                           <>
+                             <img src={imgUrl} alt={`Slot ${slot}`} className="w-full h-full object-cover" />
+                             {isAdmin && (
+                               <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer">
+                                 <div className="p-1.5 backdrop-blur-md rounded-full shadow-sm text-gray-500 hover:text-[#EB6D94] transition-colors" style={{ backgroundColor: `${COLORS.bannerOverlayBg}e6` }} title="เปลี่ยนรูป">
+                                    <IconImage size={16} />
+                                 </div>
+                               </div>
+                             )}
+                           </>
+                        ) : (
+                           <span className="text-sm font-bold flex flex-col items-center gap-2 transition-transform group-hover:scale-110" style={{ color: COLORS.textSoft }}>
+                             <IconPlus size={28}/>
+                             เพิ่มรูปช่องที่ {slot}
+                           </span>
+                        )}
+                     </div>
+                   );
+                 })}
+               </div>
             </div>
             
             <div className="px-5 relative z-10">
@@ -806,6 +860,7 @@
               </div>
             )}
 
+            {/* 🖼️ Modal เปลี่ยนรูปโปรไฟล์ */}
             {showImageModal && (
               <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/10 backdrop-blur-[2px] animate-fadeIn">
                 <form onSubmit={(e) => { 
@@ -814,7 +869,7 @@
                         let finalUrl = tempImageUrl;
                         const match = finalUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || finalUrl.match(/id=([a-zA-Z0-9_-]+)/) || finalUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
                         if (match && match[1]) {
-                            finalUrl = `https://lh3.googleusercontent.com/d/${match[1]}`;
+                            finalUrl = `https://lh3.googleusercontent.com/d/${match[1]}`; }
                         }
                         setProfileImage(finalUrl); 
                         fetchAPI({ action: 'saveProfileImage', imageUrl: finalUrl });
@@ -832,6 +887,7 @@
               </div>
             )}
 
+            {/* 🖼️ Modal เปลี่ยนรูปแบนเนอร์ */}
             {showBannerModal && (
               <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/10 backdrop-blur-[2px] animate-fadeIn">
                 <form onSubmit={(e) => { 
@@ -840,7 +896,7 @@
                         let finalUrl = tempBannerUrl;
                         const match = finalUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || finalUrl.match(/id=([a-zA-Z0-9_-]+)/) || finalUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
                         if (match && match[1]) {
-                            finalUrl = `https://lh3.googleusercontent.com/d/${match[1]}`;
+                            finalUrl = "https://lh3.googleusercontent.com/d/" + match[1];
                         }
                         setBannerImage(finalUrl); 
                         toggleBannerVisibility(true);
@@ -854,6 +910,34 @@
                      <input type="url" required value={tempBannerUrl} onChange={(e) => setTempBannerUrl(e.target.value)} className="w-full p-3.5 rounded-2xl border border-gray-100 outline-none text-[11px] shadow-sm focus:border-[#FFF0F4] transition-all text-center" style={{ backgroundColor: COLORS.cardInner }} placeholder="วางลิงก์รูปภาพ Google Drive..." />
                      <button type="submit" className="w-full py-3.5 rounded-2xl font-black text-xs mt-3 text-white shadow-lg active:scale-95 transition-all" style={{ backgroundColor: COLORS.orangeDeep }}>Save Banner</button>
                      <button type="button" onClick={() => { setShowBannerModal(false); setTempBannerUrl(''); }} className="w-full text-[9px] font-bold text-gray-300 mt-1 uppercase tracking-widest">Close</button>
+                   </div>
+                </form>
+              </div>
+            )}
+
+            {/* 🖼️ Modal สำหรับเปลี่ยนรูปช่องที่ 1, 2, 3 */}
+            {showSlotModal && (
+              <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/10 backdrop-blur-[2px] animate-fadeIn">
+                <form onSubmit={(e) => { 
+                    e.preventDefault(); 
+                    if (tempSlotUrl) { 
+                        let finalUrl = tempSlotUrl;
+                        const match = finalUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || finalUrl.match(/id=([a-zA-Z0-9_-]+)/) || finalUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+                        if (match && match[1]) {
+                            finalUrl = "https://lh3.googleusercontent.com/d/" + match[1];
+                        }
+                        setSlotImages(prev => ({ ...prev, [activeSlot]: finalUrl })); 
+                        fetchAPI({ action: 'saveSlotImage', slotIndex: activeSlot, imageUrl: finalUrl });
+                    } 
+                    setShowSlotModal(false); 
+                    setTempSlotUrl(''); 
+                    setActiveSlot(null);
+                }} className="backdrop-blur-xl w-full max-w-xs rounded-[35px] p-6 shadow-2xl animate-slideUp" style={{ backgroundColor: `${COLORS.modalBg}f2`, borderWidth: '1px', borderColor: COLORS.cardBorder }}>
+                   <h3 className="text-sm font-black mb-4 text-center text-gray-800">อัปเดตรูปช่องที่ {activeSlot}</h3>
+                   <div className="space-y-2">
+                     <input type="url" required value={tempSlotUrl} onChange={(e) => setTempSlotUrl(e.target.value)} className="w-full p-3.5 rounded-2xl border border-gray-100 outline-none text-[11px] shadow-sm focus:border-[#FFF0F4] transition-all text-center" style={{ backgroundColor: COLORS.cardInner }} placeholder="วางลิงก์รูปภาพ Google Drive..." />
+                     <button type="submit" className="w-full py-3.5 rounded-2xl font-black text-xs mt-3 text-white shadow-lg active:scale-95 transition-all" style={{ backgroundColor: COLORS.blueDeep }}>Save Image</button>
+                     <button type="button" onClick={() => { setShowSlotModal(false); setTempSlotUrl(''); setActiveSlot(null); }} className="w-full text-[9px] font-bold text-gray-300 mt-1 uppercase tracking-widest">Close</button>
                    </div>
                 </form>
               </div>
@@ -912,6 +996,3 @@
 </body>
 
 </html>
-
-
-
