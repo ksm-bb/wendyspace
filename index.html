@@ -924,7 +924,7 @@
                         let finalUrl = tempSlotUrl;
                         const match = finalUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || finalUrl.match(/id=([a-zA-Z0-9_-]+)/) || finalUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
                         if (match && match[1]) {
-                            finalUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+                            finalUrl = `https://lh3.googleusercontent.com/d/${match[1]}`;
                         }
                         setSlotImages(prev => ({ ...prev, [activeSlot]: finalUrl })); 
                         fetchAPI({ action: 'saveSlotImage', slotIndex: activeSlot, imageUrl: finalUrl });
@@ -996,4 +996,5 @@
 </body>
 
 </html>
+
 
