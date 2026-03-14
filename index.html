@@ -149,56 +149,62 @@
     ));
 
     // ==========================================
-    // 🌸 COMPONENT: ProgressFlower
+    // ✅ COMPONENT: TodoList
     // ==========================================
-    const ProgressFlower = React.memo(({ progress, todayTasksLength, doneToday, triggerFlowerBounce, isBouncing }) => {
-      const bloomScale = Math.max(0.2, progress / 100);
-      const isFullBloom = progress === 100 && todayTasksLength > 0;
-      const petals = [0, 72, 144, 216, 288].map(angle => {
-        const rad = (angle * Math.PI) / 180;
-        return { cx: 50 + 15 * Math.sin(rad), cy: 50 - 15 * Math.cos(rad), r: 18 };
-      });
+    const TodoList = React.memo(({ todos, setTodos, isAdmin }) => {
+      const [newTodo, setNewTodo] = useState('');
+
+      const handleAdd = (e) => {
+        if (e.key === 'Enter' && newTodo.trim()) {
+          setTodos([...todos, { id: Date.now(), text: newTodo.trim(), done: false }]);
+          setNewTodo('');
+        }
+      };
+
+      const toggleTodo = (id) => {
+        setTodos(todos.map(t => t.id === id ? { ...t, done: !t.done } : t));
+      };
+
+      const deleteTodo = (id) => {
+        if(!isAdmin) return;
+        setTodos(todos.filter(t => t.id !== id));
+      };
 
       return (
-        <div onClick={triggerFlowerBounce} className={`backdrop-blur-sm rounded-[28px] p-3 flex flex-col items-center justify-center shadow-lg shadow-[#EB6D94]/10 h-full relative overflow-hidden transition-all duration-300 cursor-pointer ${isBouncing ? 'scale-95' : 'hover:scale-[1.02]'}`} style={{ backgroundColor: `${COLORS.cardWhite}cc`, borderWidth: '1px', borderColor: COLORS.cardBorder }}>
-          <div className="absolute top-2 left-3 text-[8px] font-black text-purpleDeep uppercase tracking-tighter opacity-70" style={{ color: COLORS.purpleDeep }}>ความสำเร็จวันนี้</div>
-          <div className="relative w-full h-20 flex items-center justify-center mt-2">
-            {progress > 0 && (
-              <div className="absolute inset-0 pointer-events-none">
-                  <div className="absolute top-1/2 left-1/4 w-1.5 h-1.5 bg-[#EB6D94] rounded-full animate-float-particle-1 opacity-60"></div>
-                  <div className="absolute top-2/3 right-1/4 w-2 h-2 bg-[#915C6B] rounded-full animate-float-particle-2 opacity-60"></div>
-                  <div className="absolute top-1/3 right-1/3 w-1.5 h-1.5 bg-[#FFB5CA] rounded-full animate-float-particle-3 opacity-60"></div>
-              </div>
+        <div className="backdrop-blur-sm rounded-[28px] p-3 flex flex-col shadow-lg shadow-[#EB6D94]/10 h-full relative overflow-hidden transition-all duration-300" style={{ backgroundColor: `${COLORS.cardWhite}cc`, borderWidth: '1px', borderColor: COLORS.cardBorder }}>
+          <div className="absolute top-2 left-3 text-[8px] font-black uppercase tracking-tighter opacity-70" style={{ color: COLORS.purpleDeep }}>To-Do List</div>
+          
+          <div className="mt-4 flex-1 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
+            {todos.length === 0 && (
+                <div className="h-full flex items-center justify-center text-[9px] text-gray-400 font-bold opacity-60">ว่างเปล่า ✨</div>
             )}
-            <svg viewBox="0 0 100 100" className="w-20 h-20 overflow-visible">
-              <g transform="translate(50, 50)">
-                  <g className="animate-breathe">
-                    <g transform={`scale(${bloomScale})`} className="transition-transform duration-1000 cubic-bezier(0.34, 1.56, 0.64, 1)">
-                      <g transform="translate(-50, -50)">
-                        {petals.map((p, i) => (
-                          <circle key={i} cx={p.cx} cy={p.cy} r={p.r} fill="#FFE0E9" opacity="0.95" className="transition-all duration-700"/>
-                        ))}
-                        <circle cx="50" cy="50" r="14" fill="#ffebb9" className="transition-all duration-700" />
-                        {isFullBloom && (
-                          <g transform="translate(50, 50)" className="animate-fade-in">
-                            <path d="M -5 -1 Q -3 -3 -1 -1" fill="none" stroke="#915C6B" strokeWidth="1.2" strokeLinecap="round" />
-                            <path d="M 1 -1 Q 3 -3 5 -1" fill="none" stroke="#915C6B" strokeWidth="1.2" strokeLinecap="round" />
-                            <path d="M -1.5 2 Q 0 4 1.5 2" fill="none" stroke="#915C6B" strokeWidth="1.2" strokeLinecap="round" />
-                            <ellipse cx="-6" cy="1" rx="1.5" ry="1" fill="#EB6D94" opacity="0.6"/>
-                            <ellipse cx="6" cy="1" rx="1.5" ry="1" fill="#EB6D94" opacity="0.6"/>
-                          </g>
-                        )}
-                      </g>
-                    </g>
-                  </g>
-              </g>
-            </svg>
+            {todos.map(todo => (
+              <div key={todo.id} className="flex items-center gap-1.5 group">
+                <button onClick={() => toggleTodo(todo.id)} className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center flex-shrink-0 transition-colors ${todo.done ? 'bg-[#EB6D94] border-[#EB6D94]' : 'border-[#C492A0]'}`}>
+                  {todo.done && <IconCheck size={10} className="text-white" />}
+                </button>
+                <span className={`text-[9px] font-bold flex-1 truncate ${todo.done ? 'line-through text-gray-400' : 'text-gray-600'}`}>{todo.text}</span>
+                {isAdmin && (
+                  <button onClick={() => deleteTodo(todo.id)} className="opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 transition-opacity">
+                    <IconTrash size={10} />
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
-          <div className="mt-1 flex items-center gap-1 px-2 py-0.5 rounded-full z-10" style={{ backgroundColor: `${COLORS.buttonBg}99`, borderWidth: '1px', borderColor: COLORS.cardBorder }}>
-            <span className="text-xs font-black" style={{ color: COLORS.purpleDeep }}>{progress}%</span>
-            <div className="w-1 h-1 rounded-full bg-[#FFB5CA]"></div>
-            <span className="text-[8px] font-bold text-gray-400 uppercase">{doneToday} / {todayTasksLength} งาน</span>
-          </div>
+          
+          {isAdmin && (
+            <div className="mt-1">
+              <input
+                type="text"
+                value={newTodo}
+                onChange={(e) => setNewTodo(e.target.value)}
+                onKeyDown={handleAdd}
+                placeholder="+ เพิ่มรายการ (กด Enter)"
+                className="w-full text-[9px] bg-transparent outline-none border-b border-dashed border-[#FFB5CA] pb-0.5 text-gray-600 font-bold placeholder-gray-400"
+              />
+            </div>
+          )}
         </div>
       );
     });
@@ -419,7 +425,6 @@
       const [tempBannerUrl, setTempBannerUrl] = useState(''); 
       const [isBannerVisible, setIsBannerVisible] = useState(true);
       const [selectedNextDate, setSelectedNextDate] = useState(''); 
-      const [isBouncing, setIsBouncing] = useState(false); 
 
       // 🖼️ State สำหรับช่องใส่รูป 3 ช่อง
       const [slotImages, setSlotImages] = useState({ 1: null, 2: null, 3: null });
@@ -427,7 +432,15 @@
       const [activeSlot, setActiveSlot] = useState(null);
       const [tempSlotUrl, setTempSlotUrl] = useState('');
 
-      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzYIkvDwyH0Td63QV4c5qs-I3daornBdS7azhiuIh-rKogItSIlpHlB5aOWBUCCC4SEyQ/exec";
+      const [noticeText, setNoticeText] = useState(() => localStorage.getItem('wendy_notice') || 'ยินดีต้อนรับสู่ WENDYSPACE ✨');
+      const [noteText, setNoteText] = useState(() => localStorage.getItem('wendy_note') || '');
+      const [todos, setTodos] = useState(() => JSON.parse(localStorage.getItem('wendy_todos') || '[]'));
+
+      useEffect(() => { localStorage.setItem('wendy_notice', noticeText); }, [noticeText]);
+      useEffect(() => { localStorage.setItem('wendy_note', noteText); }, [noteText]);
+      useEffect(() => { localStorage.setItem('wendy_todos', JSON.stringify(todos)); }, [todos]);
+
+      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzaYLmda9ADKniJAqe9SDtAGXepXqf7q6E8mlMfz-4os6_a3nRIWzmbITfo4irkj7AFPA/exec";
 
       const fetchAPI = async (payload) => {
         try {
@@ -458,7 +471,6 @@
               if (response.data.bannerVisible !== undefined) setIsBannerVisible(response.data.bannerVisible);
               if (response.data.lockedNextDate) setSelectedNextDate(response.data.lockedNextDate);
               
-              // 🖼️ โหลดข้อมูลรูปทั้ง 3 ช่อง
               setSlotImages({
                 1: response.data.slotImage1 || null,
                 2: response.data.slotImage2 || null,
@@ -498,10 +510,6 @@
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       }, []); 
       
-      const todayTasks = useMemo(() => tasks.filter(t => t.deadline === today), [tasks, today]);
-      const doneToday = useMemo(() => todayTasks.filter(t => t.status === 'done').length, [todayTasks]);
-      const progress = todayTasks.length === 0 ? 0 : Math.round((doneToday / todayTasks.length) * 100);
-
       const nextQueueDate = useMemo(() => {
         if (selectedNextDate) return selectedNextDate;
         let checkDate = new Date();
@@ -593,8 +601,12 @@
         fetchAPI({ action: 'saveBannerVisibility', isVisible: visible });
       };
 
-      const triggerFlowerBounce = useCallback(() => { setIsBouncing(true); setTimeout(() => setIsBouncing(false), 500); }, []);
       const handleImageUpload = useCallback(() => { setShowImageModal(true); }, []);
+
+      const dashboardTasks = useMemo(() => {
+        return tasks.filter(t => t.status !== 'done' && t.deadline >= today)
+                    .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+      }, [tasks, today]);
 
       const filteredAllTasks = useMemo(() => tasks.filter(t => {
         const matchSearch = t.type.toLowerCase().includes(searchQuery.toLowerCase()) || t.client.toLowerCase().includes(searchQuery.toLowerCase());
@@ -649,8 +661,31 @@
                  </div>
                )}
 
+               <div className="mt-4 h-[40px] rounded-[20px] flex items-center px-2 overflow-hidden backdrop-blur-sm shadow-sm relative group" style={{ backgroundColor: `${COLORS.cardWhite}99`, borderWidth: '1px', borderColor: COLORS.cardBorder }}>
+                  <div className="z-10 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap shadow-sm" style={{ backgroundColor: COLORS.pinkDeep, color: COLORS.white }}>
+                      Notice
+                  </div>
+                  <div className="flex-1 overflow-hidden ml-2 relative h-full flex items-center">
+                      {isAdmin ? (
+                          <input
+                              type="text"
+                              value={noticeText}
+                              onChange={(e) => setNoticeText(e.target.value)}
+                              placeholder="พิมพ์ประกาศที่นี่..."
+                              className="w-full bg-transparent outline-none text-[11px] font-bold text-[#915C6B] px-2"
+                          />
+                      ) : (
+                          <div className="w-full overflow-hidden whitespace-nowrap">
+                              <div className="inline-block animate-marquee text-[11px] font-bold text-[#915C6B] pl-full hover:pause">
+                                  {noticeText}
+                              </div>
+                          </div>
+                      )}
+                  </div>
+               </div>
+
                {bannerImage && !isBannerVisible && isAdmin && (
-                 <div className="flex justify-end mb-1">
+                 <div className="flex justify-end mt-2 mb-1">
                     <button onClick={() => toggleBannerVisibility(true)} className="text-[10px] font-bold flex items-center gap-1 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm hover:opacity-80 transition-colors" style={{ color: COLORS.textSoft, backgroundColor: `${COLORS.buttonBg}99`, borderWidth: '1px', borderColor: COLORS.cardBorder }}>
                        <IconEye size={12} /> แสดงแบนเนอร์
                     </button>
@@ -658,78 +693,97 @@
                )}
 
                {!bannerImage && isAdmin && (
-                 <div onClick={() => setShowBannerModal(true)} className="w-full h-16 rounded-[24px] border-[3px] border-dashed backdrop-blur-sm flex items-center justify-center cursor-pointer hover:opacity-80 transition-colors" style={{ borderColor: COLORS.cardBorder, backgroundColor: `${COLORS.cardWhite}66` }}>
+                 <div onClick={() => setShowBannerModal(true)} className="w-full h-16 rounded-[24px] border-[3px] border-dashed backdrop-blur-sm flex items-center justify-center cursor-pointer hover:opacity-80 transition-colors mt-4" style={{ borderColor: COLORS.cardBorder, backgroundColor: `${COLORS.cardWhite}66` }}>
                     <span className="text-[11px] font-bold flex items-center gap-2" style={{ color: COLORS.textSoft }}><IconPlus size={16}/> เพิ่มรูปแบนเนอร์ร้าน</span>
                  </div>
                )}
 
-               {/* --- 🖼️ แสดงช่องใส่รูป 3 ช่อง (แนวตั้ง) --- */}
-               <div className="flex flex-col gap-4 mt-4">
-                 {[1, 2, 3].map((slot) => {
-                   const imgUrl = slotImages[slot];
-                   // ถ้าช่องไหนยังไม่มีรูป แล้วผู้ใช้ไม่ใช่แอดมิน ให้ซ่อนช่องนั้นไปเลย (แขกจะไม่เห็นช่องว่างเปล่า)
-                   if (!imgUrl && !isAdmin) return null;
+               {/* --- 🖼️ แสดงช่องใส่รูป 3 ช่อง (แนวตั้ง) เฉพาะหน้า Dashboard --- */}
+               {view === 'dashboard' && (
+                 <div className="flex flex-col gap-4 mt-4">
+                   {[1, 2, 3].map((slot) => {
+                     const imgUrl = slotImages[slot];
+                     if (!imgUrl && !isAdmin) return null;
 
-                   return (
-                     <div key={slot} 
-                          onClick={() => {
-                            if (isAdmin) {
-                              setActiveSlot(slot);
-                              setTempSlotUrl(imgUrl || '');
-                              setShowSlotModal(true);
-                            }
-                          }}
-                          className={`w-full aspect-square rounded-[24px] border-[3px] backdrop-blur-sm flex items-center justify-center transition-colors group relative overflow-hidden shadow-sm ${!imgUrl ? 'border-dashed cursor-pointer hover:opacity-80' : 'border-solid'}`} 
-                          style={{ borderColor: COLORS.cardBorder, backgroundColor: `${COLORS.cardWhite}66` }}>
-                        
-                        {imgUrl ? (
-                           <>
-                             <img src={imgUrl} alt={`Slot ${slot}`} className="w-full h-full object-cover" />
-                             {isAdmin && (
-                               <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer">
-                                 <div className="p-1.5 backdrop-blur-md rounded-full shadow-sm text-gray-500 hover:text-[#EB6D94] transition-colors" style={{ backgroundColor: `${COLORS.bannerOverlayBg}e6` }} title="เปลี่ยนรูป">
-                                    <IconImage size={16} />
+                     return (
+                       <div key={slot} 
+                            onClick={() => {
+                              if (isAdmin) {
+                                setActiveSlot(slot);
+                                setTempSlotUrl(imgUrl || '');
+                                setShowSlotModal(true);
+                              }
+                            }}
+                            className={`w-full aspect-square rounded-[24px] border-[3px] backdrop-blur-sm flex items-center justify-center transition-colors group relative overflow-hidden shadow-sm ${!imgUrl ? 'border-dashed cursor-pointer hover:opacity-80' : 'border-solid'}`} 
+                            style={{ borderColor: COLORS.cardBorder, backgroundColor: `${COLORS.cardWhite}66` }}>
+                         
+                          {imgUrl ? (
+                             <>
+                               <img src={imgUrl} alt={`Slot ${slot}`} className="w-full h-full object-cover" />
+                               {isAdmin && (
+                                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer">
+                                   <div className="p-1.5 backdrop-blur-md rounded-full shadow-sm text-gray-500 hover:text-[#EB6D94] transition-colors" style={{ backgroundColor: `${COLORS.bannerOverlayBg}e6` }} title="เปลี่ยนรูป">
+                                      <IconImage size={16} />
+                                   </div>
                                  </div>
-                               </div>
-                             )}
-                           </>
-                        ) : (
-                           <span className="text-sm font-bold flex flex-col items-center gap-2 transition-transform group-hover:scale-110" style={{ color: COLORS.textSoft }}>
-                             <IconPlus size={28}/>
-                             เพิ่มรูปช่องที่ {slot}
-                           </span>
-                        )}
-                     </div>
-                   );
-                 })}
-               </div>
+                               )}
+                             </>
+                          ) : (
+                             <span className="text-sm font-bold flex flex-col items-center gap-2 transition-transform group-hover:scale-110" style={{ color: COLORS.textSoft }}>
+                               <IconPlus size={28}/>
+                               เพิ่มรูปช่องที่ {slot}
+                             </span>
+                          )}
+                       </div>
+                     );
+                   })}
+                 </div>
+               )}
             </div>
             
             <div className="px-5 relative z-10">
               {view === 'dashboard' ? (
                 <div className="animate-fadeIn">
-                  <div className="flex gap-3 h-28 mb-4">
+                  <div className="flex gap-3 h-28 mb-3">
                     <div className="flex-[1.6]">
                       <CompactStats isAdmin={isAdmin} selectedNextDate={selectedNextDate} nextQueueDate={nextQueueDate} handleSetManualDate={handleSetManualDate} waitingCount={waitingCount} />
                     </div>
                     <div className="flex-1">
-                      <ProgressFlower progress={progress} todayTasksLength={todayTasks.length} doneToday={doneToday} triggerFlowerBounce={triggerFlowerBounce} isBouncing={isBouncing} />
+                      <TodoList todos={todos} setTodos={setTodos} isAdmin={isAdmin} />
                     </div>
                   </div>
-                  <div className="flex items-center justify-between mb-2.5 ml-1">
-                    <h2 className="text-[10px] font-black text-gray-400 italic uppercase tracking-[0.3em] opacity-60">Today's Task</h2>
+
+                  <div className="mb-4 h-[40px] rounded-[20px] px-3 flex items-center backdrop-blur-sm shadow-sm relative group" style={{ backgroundColor: `${COLORS.cardWhite}cc`, borderWidth: '1px', borderColor: COLORS.cardBorder }}>
+                      <div className="mr-2 opacity-60" style={{ color: COLORS.pinkDeep }}><IconFileText size={16} /></div>
+                      {isAdmin ? (
+                          <input
+                              type="text"
+                              value={noteText}
+                              onChange={(e) => setNoteText(e.target.value)}
+                              placeholder="เพิ่มโน้ตช่วยจำที่นี่..."
+                              className="flex-1 bg-transparent outline-none text-[11px] font-bold text-gray-500"
+                          />
+                      ) : (
+                          <div className="flex-1 text-[11px] font-bold text-gray-500 truncate">
+                              {noteText || "ไม่มีโน้ตเพิ่มเติม"}
+                          </div>
+                      )}
+                  </div>
+
+                  <div className="flex items-center justify-between mb-2.5 ml-1 mt-6">
+                    <h2 className="text-[10px] font-black text-gray-400 italic uppercase tracking-[0.3em] opacity-60">Active Queue</h2>
                     <div className="h-[1px] flex-1 bg-gradient-to-r from-[#FFB5CA]/40 to-transparent mx-3"></div>
                   </div>
                   <div className="space-y-1">
-                    {todayTasks.length > 0 ? todayTasks.map(t => <TaskCard key={t.id} task={t} isAdmin={isAdmin} onEdit={handleEditTask} onToggleDoing={toggleDoing} onToggleStatus={toggleStatus} />) : (
+                    {dashboardTasks.length > 0 ? dashboardTasks.map(t => <TaskCard key={t.id} task={t} isAdmin={isAdmin} onEdit={handleEditTask} onToggleDoing={toggleDoing} onToggleStatus={toggleStatus} />) : (
                       <div className="text-center py-10 rounded-[28px] border-2 border-dashed" style={{ backgroundColor: `${COLORS.cardWhite}4d`, borderColor: '#B2E0DF80' }}>
-                        <p className="text-[9px] font-bold uppercase tracking-widest opacity-40" style={{ color: COLORS.pinkDeep }}>Sky is clear ✨</p>
+                        <p className="text-[9px] font-bold uppercase tracking-widest opacity-40" style={{ color: COLORS.pinkDeep }}>เคลียร์คิวหน้าแรกหมดแล้ว ✨</p>
                       </div>
                     )}
                   </div>
                 </div>
               ) : (
-                <div className="animate-fadeIn">
+                <div className="animate-fadeIn mt-4">
                   <div className="relative mb-4">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 opacity-50" style={{ color: COLORS.blueDeep }}><IconSearch size={16} /></div>
                     <input type="text" placeholder="ค้นหาคิวงาน..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full rounded-[22px] py-3 pl-10 pr-4 outline-none text-xs shadow-lg shadow-[#EB6D94]/5 transition-all backdrop-blur-sm" style={{ backgroundColor: `${COLORS.searchInputBg}cc`, borderWidth: '2px', borderColor: COLORS.blue }} />
@@ -785,6 +839,7 @@
               </div>
             </div>
 
+            {/* Modal: เพิ่ม/แก้ไขคิว */}
             {showModal && (
               <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/10 backdrop-blur-[2px] animate-fadeIn">
                 <form onSubmit={handleSaveTask} className="backdrop-blur-xl w-full max-w-xs rounded-[35px] p-6 shadow-2xl animate-slideUp" style={{ backgroundColor: `${COLORS.modalBg}f2`, borderWidth: '1px', borderColor: COLORS.cardBorder }}>
@@ -844,6 +899,7 @@
               </div>
             )}
 
+            {/* Modal: Login */}
             {showAuthModal && (
               <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-black/10 backdrop-blur-[2px] animate-fadeIn">
                 <form onSubmit={handleAdminLogin} className="backdrop-blur-xl w-full max-w-xs rounded-[35px] p-6 shadow-2xl animate-slideUp" style={{ backgroundColor: `${COLORS.modalBg}f2`, borderWidth: '1px', borderColor: COLORS.cardBorder }}>
@@ -860,7 +916,7 @@
               </div>
             )}
 
-            {/* 🖼️ Modal เปลี่ยนรูปโปรไฟล์ */}
+            {/* Modal: เปลี่ยนรูปโปรไฟล์ */}
             {showImageModal && (
               <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/10 backdrop-blur-[2px] animate-fadeIn">
                 <form onSubmit={(e) => { 
@@ -887,7 +943,7 @@
               </div>
             )}
 
-            {/* 🖼️ Modal เปลี่ยนรูปแบนเนอร์ */}
+            {/* Modal: เปลี่ยนรูปแบนเนอร์ */}
             {showBannerModal && (
               <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/10 backdrop-blur-[2px] animate-fadeIn">
                 <form onSubmit={(e) => { 
@@ -915,7 +971,7 @@
               </div>
             )}
 
-            {/* 🖼️ Modal สำหรับเปลี่ยนรูปช่องที่ 1, 2, 3 */}
+            {/* Modal: เปลี่ยนรูปช่องที่ 1, 2, 3 */}
             {showSlotModal && (
               <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-black/10 backdrop-blur-[2px] animate-fadeIn">
                 <form onSubmit={(e) => { 
@@ -943,6 +999,7 @@
               </div>
             )}
 
+            {/* Modal: ยืนยันการลบ */}
             {taskToDelete && (
               <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/20 backdrop-blur-[2px] animate-fadeIn">
                 <div className="backdrop-blur-xl w-full max-w-[260px] rounded-[30px] p-6 shadow-2xl animate-slideUp text-center" style={{ backgroundColor: `${COLORS.modalBg}f2`, borderWidth: '1px', borderColor: COLORS.cardBorder }}>
@@ -963,6 +1020,15 @@
           </div>
           
           <style>{`
+            @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+            .animate-marquee { display: inline-block; white-space: nowrap; animation: marquee 12s linear infinite; padding-left: 100%; }
+            .hover\\:pause:hover { animation-play-state: paused; }
+            .pl-full { padding-left: 100%; }
+
+            .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+            .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+            .custom-scrollbar::-webkit-scrollbar-thumb { background: #FFB5CA; border-radius: 10px; }
+
             @keyframes float { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(25px, -15px); } }
             @keyframes float-reverse { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-25px, 15px); } }
             @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
@@ -974,6 +1040,7 @@
             @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
             @keyframes text-wave { 0%, 20%, 100% { transform: translateY(0px); } 10% { transform: translateY(-5px); } }
             @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+            
             .animate-text-wave { animation: text-wave 4s ease-in-out infinite; }
             .animate-breathe { animation: breathe 4s ease-in-out infinite; transform-origin: center; }
             .animate-float-particle-1 { animation: float-particle-1 3s ease-out infinite; }
@@ -994,8 +1061,4 @@
     root.render(<App />);
   </script>
 </body>
-
 </html>
-
-
-
