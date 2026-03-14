@@ -56,7 +56,6 @@
       orangeDeep: '#5C9E9D',
       cardBg: '#FFFFFF',
       cardBgDone: '#F2FAFA',
-
       cardWhite: '#ffffff',
       cardBorder: '#ffffff',
       cardInner: '#ffffff',
@@ -115,16 +114,16 @@
           <div className="flex flex-col justify-center ml-2 relative z-10">
             <div className="flex items-center gap-1">
              <h1 className="text-2xl font-black italic tracking-tighter flex">
-  {"WENDYSPACE".split('').map((char, index) => (
-    <span 
-      key={index} 
-      className={`bg-gradient-to-br from-[#EB6D94] to-[#FFB5CA] bg-clip-text text-transparent drop-shadow-sm inline-block animate-text-wave pb-2 ${char === ' ' ? 'w-2.5' : 'pr-[1.5px]'}`} 
-      style={{ animationDelay: `${index * 0.1}s` }}
-    >
-      {char}
-    </span>
-  ))}
-</h1>
+              {"WENDYSPACE".split('').map((char, index) => (
+                <span 
+                  key={index} 
+                  className={`bg-gradient-to-br from-[#EB6D94] to-[#FFB5CA] bg-clip-text text-transparent drop-shadow-sm inline-block animate-text-wave pb-2 ${char === ' ' ? 'w-2.5' : 'pr-[1.5px]'}`} 
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  {char}
+                </span>
+              ))}
+            </h1>
               <button onClick={() => isAdmin ? setIsAdmin(false) : setShowAuthModal(true)} className={`px-1.5 py-0.5 ml-1 rounded-full text-[7px] font-black uppercase tracking-widest border shadow-sm transition-all active:scale-95`} style={{ backgroundColor: isAdmin ? `${COLORS.buttonBg}99` : `${COLORS.buttonBg}cc`, color: isAdmin ? '#EB6D94' : '#9ca3af', borderColor: isAdmin ? '#FFB5CA' : '#e5e7eb' }}>
                 {isAdmin ? 'Admin' : 'Guest'}
               </button>
@@ -151,23 +150,30 @@
     // ==========================================
     // ✅ COMPONENT: TodoList
     // ==========================================
-    const TodoList = React.memo(({ todos, setTodos, isAdmin }) => {
+    const TodoList = React.memo(({ todos, setTodos, isAdmin, saveTodosAPI }) => {
       const [newTodo, setNewTodo] = useState('');
 
       const handleAdd = (e) => {
         if (e.key === 'Enter' && newTodo.trim()) {
-          setTodos([...todos, { id: Date.now(), text: newTodo.trim(), done: false }]);
+          const updatedTodos = [...todos, { id: Date.now(), text: newTodo.trim(), done: false }];
+          setTodos(updatedTodos);
+          saveTodosAPI(updatedTodos); // เซฟขึ้น Apps Script ทันที
           setNewTodo('');
         }
       };
 
       const toggleTodo = (id) => {
-        setTodos(todos.map(t => t.id === id ? { ...t, done: !t.done } : t));
+        if(!isAdmin) return;
+        const updatedTodos = todos.map(t => t.id === id ? { ...t, done: !t.done } : t);
+        setTodos(updatedTodos);
+        saveTodosAPI(updatedTodos); // เซฟขึ้น Apps Script ทันที
       };
 
       const deleteTodo = (id) => {
         if(!isAdmin) return;
-        setTodos(todos.filter(t => t.id !== id));
+        const updatedTodos = todos.filter(t => t.id !== id);
+        setTodos(updatedTodos);
+        saveTodosAPI(updatedTodos); // เซฟขึ้น Apps Script ทันที
       };
 
       return (
@@ -180,9 +186,16 @@
             )}
             {todos.map(todo => (
               <div key={todo.id} className="flex items-center gap-1.5 group">
-                <button onClick={() => toggleTodo(todo.id)} className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center flex-shrink-0 transition-colors ${todo.done ? 'bg-[#EB6D94] border-[#EB6D94]' : 'border-[#C492A0]'}`}>
-                  {todo.done && <IconCheck size={10} className="text-white" />}
-                </button>
+                {isAdmin ? (
+                  <button onClick={() => toggleTodo(todo.id)} className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center flex-shrink-0 transition-colors ${todo.done ? 'bg-[#EB6D94] border-[#EB6D94]' : 'border-[#C492A0]'}`}>
+                    {todo.done && <IconCheck size={10} className="text-white" />}
+                  </button>
+                ) : (
+                  <div className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center flex-shrink-0 transition-colors ${todo.done ? 'bg-[#EB6D94] border-[#EB6D94]' : 'border-[#C492A0]'}`}>
+                    {todo.done && <IconCheck size={10} className="text-white" />}
+                  </div>
+                )}
+                
                 <span className={`text-[9px] font-bold flex-1 truncate ${todo.done ? 'line-through text-gray-400' : 'text-gray-600'}`}>{todo.text}</span>
                 {isAdmin && (
                   <button onClick={() => deleteTodo(todo.id)} className="opacity-0 group-hover:opacity-100 text-red-300 hover:text-red-500 transition-opacity">
@@ -261,12 +274,12 @@
     const TaskCard = React.memo(({ task, isAdmin, onEdit, onToggleDoing, onToggleStatus }) => (
       <div onClick={() => isAdmin && onEdit(task)} className={`relative mb-2 rounded-[22px] p-3 transition-all shadow-sm group backdrop-blur-sm ${isAdmin ? 'active:scale-[0.97] cursor-pointer' : ''}`} 
         style={{ 
-  backgroundColor: task.status === 'done' ? COLORS.cardBgDone : task.status === 'doing' ? COLORS.cardBg : COLORS.cardBg,
-  borderWidth: '1px',
-  borderStyle: 'solid',
-  borderColor: task.status === 'doing' ? COLORS.orangeDeep : (task.status === 'done' ? 'transparent' : COLORS.white), 
-  opacity: task.status === 'done' ? 0.7 : 1 
-}}
+          backgroundColor: task.status === 'done' ? COLORS.cardBgDone : task.status === 'doing' ? COLORS.cardBg : COLORS.cardBg,
+          borderWidth: '1px',
+          borderStyle: 'solid',
+          borderColor: task.status === 'doing' ? COLORS.orangeDeep : (task.status === 'done' ? 'transparent' : COLORS.white), 
+          opacity: task.status === 'done' ? 0.7 : 1 
+        }}
         >
         {task.status === 'doing' && (
            <div className="absolute inset-0 pointer-events-none z-0">
@@ -395,6 +408,9 @@
     // 🏠 MAIN APP COMPONENT
     // ==========================================
     function App() {
+      // ⚠️⚠️⚠️ วางลิงก์ Web App URL ของคุณที่นี่ ⚠️⚠️⚠️
+      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbysrxCRfLr-cJ0uBx9Q-KFxQlYWPWy4v5dQFacCGPz1FrvxygO7VVUX9eYR3gKvMA2pOQ/exec";
+
       const [tasks, setTasks] = useState([]);
       const [taskTypes, setTaskTypes] = useState(['Logo', 'Banner', 'Artwork']); 
       const [channels, setChannels] = useState(['LINE', 'FB', 'IG']); 
@@ -426,22 +442,17 @@
       const [isBannerVisible, setIsBannerVisible] = useState(true);
       const [selectedNextDate, setSelectedNextDate] = useState(''); 
 
-      // 🖼️ State สำหรับช่องใส่รูป 3 ช่อง
       const [slotImages, setSlotImages] = useState({ 1: null, 2: null, 3: null });
       const [showSlotModal, setShowSlotModal] = useState(false);
       const [activeSlot, setActiveSlot] = useState(null);
       const [tempSlotUrl, setTempSlotUrl] = useState('');
 
-      const [noticeText, setNoticeText] = useState(() => localStorage.getItem('wendy_notice') || 'ยินดีต้อนรับสู่ WENDYSPACE ✨');
-      const [noteText, setNoteText] = useState(() => localStorage.getItem('wendy_note') || '');
-      const [todos, setTodos] = useState(() => JSON.parse(localStorage.getItem('wendy_todos') || '[]'));
+      // State สำหรับฟีเจอร์ใหม่
+      const [noticeText, setNoticeText] = useState('ยินดีต้อนรับสู่ WENDYSPACE ✨');
+      const [noteText, setNoteText] = useState('');
+      const [todos, setTodos] = useState([]);
 
-      useEffect(() => { localStorage.setItem('wendy_notice', noticeText); }, [noticeText]);
-      useEffect(() => { localStorage.setItem('wendy_note', noteText); }, [noteText]);
-      useEffect(() => { localStorage.setItem('wendy_todos', JSON.stringify(todos)); }, [todos]);
-
-      const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbysrxCRfLr-cJ0uBx9Q-KFxQlYWPWy4v5dQFacCGPz1FrvxygO7VVUX9eYR3gKvMA2pOQ/exec";
-
+      // 🔌 ฟังก์ชันส่งข้อมูลไปหลังบ้าน
       const fetchAPI = async (payload) => {
         try {
           const res = await fetch(WEB_APP_URL, {
@@ -476,6 +487,11 @@
                 2: response.data.slotImage2 || null,
                 3: response.data.slotImage3 || null
               });
+
+              // รับข้อมูลใหม่จากชีตมาแสดงผล
+              if (response.data.noticeText !== undefined) setNoticeText(response.data.noticeText);
+              if (response.data.noteText !== undefined) setNoteText(response.data.noteText);
+              if (response.data.todos) setTodos(response.data.todos);
             }
             setIsLoading(false);
           })
@@ -603,6 +619,25 @@
 
       const handleImageUpload = useCallback(() => { setShowImageModal(true); }, []);
 
+      // ✨ ฟังก์ชันบันทึกข้อมูลฟีเจอร์ใหม่ขึ้น Google Sheets ทันที
+      const saveTodosAPI = useCallback((updatedTodos) => {
+        fetchAPI({ action: 'saveTodos', todos: updatedTodos });
+      }, []);
+
+      const handleNoticeChange = (e) => {
+        setNoticeText(e.target.value);
+      };
+      const handleNoticeBlur = () => {
+        fetchAPI({ action: 'saveNoticeText', text: noticeText }); // เซฟตอนคลิกออก
+      };
+
+      const handleNoteChange = (e) => {
+        setNoteText(e.target.value);
+      };
+      const handleNoteBlur = () => {
+        fetchAPI({ action: 'saveNoteText', text: noteText }); // เซฟตอนคลิกออก
+      };
+
       const dashboardTasks = useMemo(() => {
         return tasks.filter(t => t.status !== 'done' && t.deadline >= today)
                     .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
@@ -670,7 +705,8 @@
                           <input
                               type="text"
                               value={noticeText}
-                              onChange={(e) => setNoticeText(e.target.value)}
+                              onChange={handleNoticeChange}
+                              onBlur={handleNoticeBlur} 
                               placeholder="พิมพ์ประกาศที่นี่..."
                               className="w-full bg-transparent outline-none text-[11px] font-bold text-[#915C6B] px-2"
                           />
@@ -698,7 +734,6 @@
                  </div>
                )}
 
-               {/* --- 🖼️ แสดงช่องใส่รูป 3 ช่อง (แนวตั้ง) เฉพาะหน้า Dashboard --- */}
                {view === 'dashboard' && (
                  <div className="flex flex-col gap-4 mt-4">
                    {[1, 2, 3].map((slot) => {
@@ -749,7 +784,7 @@
                       <CompactStats isAdmin={isAdmin} selectedNextDate={selectedNextDate} nextQueueDate={nextQueueDate} handleSetManualDate={handleSetManualDate} waitingCount={waitingCount} />
                     </div>
                     <div className="flex-1">
-                      <TodoList todos={todos} setTodos={setTodos} isAdmin={isAdmin} />
+                      <TodoList todos={todos} setTodos={setTodos} isAdmin={isAdmin} saveTodosAPI={saveTodosAPI} />
                     </div>
                   </div>
 
@@ -759,7 +794,8 @@
                           <input
                               type="text"
                               value={noteText}
-                              onChange={(e) => setNoteText(e.target.value)}
+                              onChange={handleNoteChange}
+                              onBlur={handleNoteBlur} 
                               placeholder="เพิ่มโน้ตช่วยจำที่นี่..."
                               className="flex-1 bg-transparent outline-none text-[11px] font-bold text-gray-500"
                           />
@@ -925,7 +961,7 @@
                         let finalUrl = tempImageUrl;
                         const match = finalUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || finalUrl.match(/id=([a-zA-Z0-9_-]+)/) || finalUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
                         if (match && match[1]) {
-                            finalUrl = `https://lh3.googleusercontent.com/d/${match[1]}`;
+                            finalUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
                         }
                         setProfileImage(finalUrl); 
                         fetchAPI({ action: 'saveProfileImage', imageUrl: finalUrl });
@@ -952,7 +988,7 @@
                         let finalUrl = tempBannerUrl;
                         const match = finalUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || finalUrl.match(/id=([a-zA-Z0-9_-]+)/) || finalUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
                         if (match && match[1]) {
-                            finalUrl = `https://lh3.googleusercontent.com/d/${match[1]}`;
+                            finalUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
                         }
                         setBannerImage(finalUrl); 
                         toggleBannerVisibility(true);
@@ -980,7 +1016,7 @@
                         let finalUrl = tempSlotUrl;
                         const match = finalUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || finalUrl.match(/id=([a-zA-Z0-9_-]+)/) || finalUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
                         if (match && match[1]) {
-                            finalUrl = `https://lh3.googleusercontent.com/d/${match[1]}`;
+                            finalUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
                         }
                         setSlotImages(prev => ({ ...prev, [activeSlot]: finalUrl })); 
                         fetchAPI({ action: 'saveSlotImage', slotIndex: activeSlot, imageUrl: finalUrl });
