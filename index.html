@@ -114,7 +114,7 @@
           <div className="flex flex-col justify-center ml-2 relative z-10">
             <div className="flex items-center gap-1">
              <h1 className="text-2xl font-black italic tracking-tighter flex">
-              {"WENDYSPACE".split('').map((char, index) => (
+             {"WENDYSPACE".split('').map((char, index) => (
                 <span 
                   key={index} 
                   className={`bg-gradient-to-br from-[#EB6D94] to-[#FFB5CA] bg-clip-text text-transparent drop-shadow-sm inline-block animate-text-wave pb-2 ${char === ' ' ? 'w-2.5' : 'pr-[1.5px]'}`} 
@@ -153,12 +153,18 @@
     const TodoList = React.memo(({ todos, setTodos, isAdmin, saveTodosAPI }) => {
       const [newTodo, setNewTodo] = useState('');
 
-      const handleAdd = (e) => {
-        if (e.key === 'Enter' && newTodo.trim()) {
+      const submitNewTodo = () => {
+        if (newTodo.trim()) {
           const updatedTodos = [...todos, { id: Date.now(), text: newTodo.trim(), done: false }];
           setTodos(updatedTodos);
           saveTodosAPI(updatedTodos); // เซฟขึ้น Apps Script ทันที
           setNewTodo('');
+        }
+      };
+
+      const handleAdd = (e) => {
+        if (e.key === 'Enter') {
+          submitNewTodo();
         }
       };
 
@@ -207,15 +213,22 @@
           </div>
           
           {isAdmin && (
-            <div className="mt-1">
+            <div className="mt-1 flex items-center gap-1 border-b border-dashed border-[#FFB5CA] pb-0.5">
               <input
                 type="text"
                 value={newTodo}
                 onChange={(e) => setNewTodo(e.target.value)}
                 onKeyDown={handleAdd}
-                placeholder="+ เพิ่มรายการ (กด Enter)"
-                className="w-full text-[9px] bg-transparent outline-none border-b border-dashed border-[#FFB5CA] pb-0.5 text-gray-600 font-bold placeholder-gray-400"
+                placeholder="เพิ่มรายการ..."
+                className="flex-1 text-[9px] bg-transparent outline-none text-gray-600 font-bold placeholder-gray-400"
               />
+              <button 
+                onClick={submitNewTodo}
+                className="flex items-center justify-center text-[#EB6D94] hover:scale-110 active:scale-95 transition-transform p-0.5"
+                title="เพิ่มรายการ"
+              >
+                <IconPlus size={14} />
+              </button>
             </div>
           )}
         </div>
@@ -594,7 +607,7 @@
         fetchAPI({ action: 'saveOrUpdateTask', task: taskData })
           .then(res => {
              if (res.status === 'success') {
-                setTasks(prev => editingTask ? prev.map(t => t.id === res.task.id ? res.task : t) : [...prev, res.task]);
+               setTasks(prev => editingTask ? prev.map(t => t.id === res.task.id ? res.task : t) : [...prev, res.task]);
              }
              setIsSaving(false); setShowModal(false); setEditingTask(null);
           })
@@ -752,7 +765,7 @@
                             className={`w-full aspect-square rounded-[24px] border-[3px] backdrop-blur-sm flex items-center justify-center transition-colors group relative overflow-hidden shadow-sm ${!imgUrl ? 'border-dashed cursor-pointer hover:opacity-80' : 'border-solid'}`} 
                             style={{ borderColor: COLORS.cardBorder, backgroundColor: `${COLORS.cardWhite}66` }}>
                          
-                          {imgUrl ? (
+                         {imgUrl ? (
                              <>
                                <img src={imgUrl} alt={`Slot ${slot}`} className="w-full h-full object-cover" />
                                {isAdmin && (
@@ -1096,5 +1109,17 @@
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
+    <script>
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'F12' || e.keyCode === 123) { e.preventDefault(); return false; }
+    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) { e.preventDefault(); return false; }
+    if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j')) { e.preventDefault(); return false; }
+    if (e.ctrlKey && (e.key === 'U' || e.key === 'u')) { e.preventDefault(); return false; }
+    if (e.ctrlKey && (e.key === 'S' || e.key === 's')) { e.preventDefault(); return false; }
+  });
+</script>
 </body>
 </html>
